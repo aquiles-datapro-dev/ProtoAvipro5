@@ -6,13 +6,13 @@ using Shared.Models;
 
 namespace API.Database;
 
-public partial class Avipro5Context : DbContext
+public partial class CustomDBContext : DbContext
 {
-    public Avipro5Context()
+    public CustomDBContext()
     {
     }
 
-    public Avipro5Context(DbContextOptions<Avipro5Context> options)
+    public CustomDBContext(DbContextOptions<CustomDBContext> options)
         : base(options)
     {
     }
