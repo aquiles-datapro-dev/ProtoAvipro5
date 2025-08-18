@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="Avipro5" id="Project_2a0" database="MySql" >
+	<schema name="avipro5" >
+		<table name="employees" >
+			<column name="id" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="last_name" type="varchar" length="30" jt="12" />
+			<column name="first_name" type="varchar" length="30" jt="12" />
+			<column name="middle_initial" type="varchar" length="3" jt="12" />
+			<column name="address" type="text" length="100" jt="-1" />
+			<column name="city" type="varchar" length="50" jt="12" />
+			<column name="zip_code" type="varchar" length="15" jt="12" />
+			<column name="home_phone" type="varchar" length="25" jt="12" />
+			<column name="beeper" type="varchar" length="25" jt="12" />
+			<column name="cellular" type="varchar" length="50" jt="12" />
+			<column name="emergency_contact" type="varchar" length="20" jt="12" />
+			<column name="emergency_phone" type="varchar" length="25" jt="12" />
+			<column name="emergency_relation" type="varchar" length="25" jt="12" />
+			<column name="hire_date" type="datetime" jt="93" />
+			<column name="last_work_date" type="datetime" jt="93" />
+			<column name="date_birth" type="datetime" jt="93" />
+			<column name="title" type="varchar" length="40" jt="12" />
+			<column name="wages" type="decimal" length="19" decimal="4" jt="3" />
+			<column name="comments" type="longtext" jt="-1" />
+			<column name="ss" type="varchar" length="15" jt="12" />
+			<column name="dep" type="int" jt="4" />
+			<column name="shop" type="varchar" length="20" jt="12" />
+			<column name="m_s" type="varchar" length="1" jt="12" />
+			<column name="active" type="boolean" jt="-7" />
+			<column name="tech" type="boolean" jt="-7" />
+			<column name="insp" type="boolean" jt="-7" />
+			<column name="emp_ini" type="varchar" length="5" jt="12" />
+			<column name="username" type="varchar" length="100" jt="12" />
+			<column name="email" type="varchar" length="50" jt="12" />
+			<column name="password" type="text" jt="-1" />
+			<column name="emp_mail" type="varchar" length="50" jt="12" />
+			<column name="office_personal" type="boolean" jt="-7" />
+			<column name="service" type="boolean" jt="-7" />
+			<column name="department" type="varchar" length="50" jt="12" />
+			<column name="total_vac" type="int" jt="4" />
+			<column name="used_vac" type="int" jt="4" />
+			<column name="balance_vac" type="int" jt="4" />
+			<column name="sing_off_title" type="varchar" length="50" jt="12" />
+			<column name="ri" type="boolean" jt="-7" />
+			<column name="ip" type="boolean" jt="-7" />
+			<column name="rts" type="boolean" jt="-7" />
+			<column name="created_at" type="datetime" jt="93" />
+			<column name="modified_at" type="datetime" jt="93" />
+			<column name="state_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="role_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="pk_tbl_employee_id" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="fk_tbl_employees_tbl_state" unique="NORMAL" >
+				<column name="state_id" />
+			</index>
+			<index name="fk_tbl_employees_tbl_roles" unique="NORMAL" >
+				<column name="role_id" />
+			</index>
+			<fk name="fk_tbl_employees_tbl_state" to_schema="avipro5" to_table="state" delete_action="cascade" update_action="cascade" >
+				<fk_column name="state_id" pk="id" />
+			</fk>
+			<fk name="fk_tbl_employees_tbl_roles" to_schema="avipro5" to_table="roles" delete_action="cascade" update_action="cascade" >
+				<fk_column name="role_id" pk="id" />
+			</fk>
+			<options><![CDATA[engine=InnoDB]]></options>
+		</table>
+		<table name="employees_functionalities" >
+			<column name="id" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="employee_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="functionality_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="pk_employees_functionalities_id" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="fk_employees_functionalities_employees" unique="NORMAL" >
+				<column name="employee_id" />
+			</index>
+			<index name="fk_employees_functionalities_functionalities" unique="NORMAL" >
+				<column name="functionality_id" />
+			</index>
+			<fk name="fk_employees_functionalities_employees" to_schema="avipro5" to_table="employees" >
+				<fk_column name="employee_id" pk="id" />
+			</fk>
+			<fk name="fk_employees_functionalities_functionalities" to_schema="avipro5" to_table="functionalities" >
+				<fk_column name="functionality_id" pk="id" />
+			</fk>
+			<options><![CDATA[engine=InnoDB]]></options>
+		</table>
+		<table name="functionalities" >
+			<column name="id" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="module_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="name" type="varchar" length="100" jt="12" />
+			<index name="pk_functionalities_id" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="fk_functionalities_module" unique="NORMAL" >
+				<column name="module_id" />
+			</index>
+			<fk name="fk_functionalities_module" to_schema="avipro5" to_table="module" >
+				<fk_column name="module_id" pk="id" />
+			</fk>
+			<options><![CDATA[engine=InnoDB]]></options>
+		</table>
+		<table name="module" >
+			<column name="id" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="name" type="varchar" length="100" jt="12" />
+			<index name="pk_module_id" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<options><![CDATA[engine=InnoDB]]></options>
+		</table>
+		<table name="roles" >
+			<column name="parent_role_id" type="bigint" jt="-5" />
+			<column name="id" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="name" type="varchar" length="100" jt="12" />
+			<column name="description" type="text" jt="-1" />
+			<column name="created_at" type="datetime" jt="93" />
+			<column name="modified_at" type="datetime" jt="93" />
+			<index name="pk_tbl_roles_id" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="fk_tbl_roles_tbl_roles" unique="NORMAL" >
+				<column name="parent_role_id" />
+			</index>
+			<fk name="fk_tbl_roles_tbl_roles" to_schema="avipro5" to_table="roles" delete_action="cascade" update_action="cascade" >
+				<fk_column name="parent_role_id" pk="id" />
+			</fk>
+			<options><![CDATA[engine=InnoDB]]></options>
+		</table>
+		<table name="roles_functionalities" >
+			<column name="id" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="role_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="functionality_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="pk_roles_functionalities_id" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="fk_roles_functionalities_functionalities" unique="NORMAL" >
+				<column name="functionality_id" />
+			</index>
+			<index name="fk_roles_functionalities_roles" unique="NORMAL" >
+				<column name="role_id" />
+			</index>
+			<fk name="fk_roles_functionalities_functionalities" to_schema="avipro5" to_table="functionalities" >
+				<fk_column name="functionality_id" pk="id" />
+			</fk>
+			<fk name="fk_roles_functionalities_roles" to_schema="avipro5" to_table="roles" >
+				<fk_column name="role_id" pk="id" />
+			</fk>
+			<options><![CDATA[engine=InnoDB]]></options>
+		</table>
+		<table name="state" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="abbr" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="name" type="varchar" length="100" decimal="0" jt="12" />
+			<column name="created_at" type="datetime" length="19" decimal="0" jt="93" />
+			<column name="modified_at" type="datetime" length="19" decimal="0" jt="93" />
+			<index name="pk_tbl_state" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="vendors" >
+			<column name="id" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="vendor_name" type="varchar" length="50" jt="12" />
+			<column name="address" type="text" length="100" jt="-1" />
+			<column name="city" type="varchar" length="25" jt="12" />
+			<column name="zip_code" type="varchar" length="15" jt="12" />
+			<column name="phone" type="varchar" length="25" jt="12" />
+			<column name="fax" type="varchar" length="25" jt="12" />
+			<column name="contact" type="varchar" length="100" jt="12" />
+			<column name="payment_method" type="varchar" length="50" jt="12" />
+			<column name="terms" type="int" jt="4" />
+			<column name="bal_due" type="decimal" length="19" decimal="4" jt="3" />
+			<column name="vendor_tax" type="float" length="12" decimal="0" jt="7" />
+			<column name="internet_address" type="varchar" length="50" jt="12" />
+			<column name="acct_number" type="varchar" length="50" jt="12" />
+			<column name="fast_type" type="int" jt="4" />
+			<column name="email" type="varchar" length="50" jt="12" />
+			<column name="contact_second" type="varchar" length="100" jt="12" />
+			<column name="country" type="varchar" length="50" jt="12" />
+			<column name="bill_add_1" type="varchar" length="50" jt="12" />
+			<column name="bill_add_2" type="varchar" length="50" jt="12" />
+			<column name="bill_city" type="varchar" length="50" jt="12" />
+			<column name="bill_state" type="varchar" length="2" jt="12" />
+			<column name="bill_zip" type="varchar" length="50" jt="12" />
+			<column name="bill_country" type="varchar" length="50" jt="12" />
+			<column name="audit_vendor" type="boolean" jt="-7" />
+			<column name="last_audit_date" type="datetime" jt="93" />
+			<column name="blacklist" type="boolean" jt="-7" />
+			<column name="date_audit_sent" type="datetime" jt="93" />
+			<column name="audit_notes" type="text" length="600" jt="-1" />
+			<column name="easa_date" type="datetime" jt="93" />
+			<column name="drug_pro_date" type="datetime" jt="93" />
+			<column name="iso_date" type="datetime" jt="93" />
+			<column name="nap_cap_date" type="datetime" jt="93" />
+			<column name="created_at" type="datetime" jt="93" />
+			<column name="modified_at" type="datetime" jt="93" />
+			<column name="state_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="pk_tbl_vendors_id" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="fk_tbl_vendors_tbl_state" unique="NORMAL" >
+				<column name="state_id" />
+			</index>
+			<fk name="fk_tbl_vendors_tbl_state" to_schema="avipro5" to_table="state" delete_action="cascade" update_action="cascade" >
+				<fk_column name="state_id" pk="id" />
+			</fk>
+			<options><![CDATA[engine=InnoDB]]></options>
+		</table>
+		<table name="vendors_contact" >
+			<column name="id" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="name" type="varchar" length="50" jt="12" />
+			<column name="title" type="int" jt="4" />
+			<column name="email" type="varchar" length="50" jt="12" />
+			<column name="phone" type="varchar" length="50" jt="12" />
+			<column name="fax" type="varchar" length="50" jt="12" />
+			<column name="created_at" type="datetime" jt="93" />
+			<column name="modified_at" type="datetime" jt="93" />
+			<column name="vendor_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="pk_tbl_vendors_contact_id" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="fk_tbl_vendors_contact_tbl_vendors" unique="NORMAL" >
+				<column name="vendor_id" />
+			</index>
+			<fk name="fk_tbl_vendors_contact_tbl_vendors" to_schema="avipro5" to_table="vendors" delete_action="cascade" update_action="cascade" >
+				<fk_column name="vendor_id" pk="id" />
+			</fk>
+			<options><![CDATA[engine=InnoDB]]></options>
+		</table>
+	</schema>
+	<connector name="Avipro5" database="MySql" driver_class="com.mysql.jdbc.Driver" driver_jar="mysql-connector-java-8.0.19.jar" driver_desc="Standard" host="localhost" port="3306" instance="avipro5" user="root" passwd="cm9vdA==" />
+	<layout name="Default Layout" id="Layout_2118" show_relation="columns" >
+		<entity schema="avipro5" name="employees" color="C1D8EE" x="48" y="48" />
+		<entity schema="avipro5" name="employees_functionalities" color="C1D8EE" x="432" y="400" />
+		<entity schema="avipro5" name="functionalities" color="C1D8EE" x="656" y="80" />
+		<entity schema="avipro5" name="module" color="C1D8EE" x="848" y="96" />
+		<entity schema="avipro5" name="roles" color="C1D8EE" x="304" y="64" />
+		<entity schema="avipro5" name="roles_functionalities" color="C1D8EE" x="400" y="256" />
+		<entity schema="avipro5" name="state" color="3986C1" x="416" y="544" />
+		<entity schema="avipro5" name="vendors" color="C1D8EE" x="1024" y="64" />
+		<entity schema="avipro5" name="vendors_contact" color="C1D8EE" x="784" y="336" />
+	</layout>
+</project>
