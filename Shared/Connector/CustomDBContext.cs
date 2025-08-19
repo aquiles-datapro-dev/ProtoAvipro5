@@ -1,43 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
 using Shared.Models;
 
-namespace API.Database;
+namespace Shared.Connector;
 
 public partial class CustomDBContext : DbContext
 {
+
+   private readonly IConfiguration _configuration;
+   public virtual DbSet<Employee> Employees { get; set; }
+   public virtual DbSet<EmployeesFunctionality> EmployeesFunctionalities { get; set; }
+   public virtual DbSet<Functionality> Functionalities { get; set; }
+   public virtual DbSet<Module> Modules { get; set; }
+   public virtual DbSet<Role> Roles { get; set; }
+   public virtual DbSet<RolesFunctionality> RolesFunctionalities { get; set; }
+   public virtual DbSet<State> States { get; set; }
+   public virtual DbSet<Vendor> Vendors { get; set; }
+   public virtual DbSet<VendorsContact> VendorsContacts { get; set; }
+
+
     public CustomDBContext()
     {
     }
 
-    public CustomDBContext(DbContextOptions<CustomDBContext> options)
+    public CustomDBContext(DbContextOptions<CustomDBContext> options, IConfiguration configuration)
         : base(options)
     {
+        _configuration = configuration;
     }
 
-    public virtual DbSet<Employee> Employees { get; set; }
-
-    public virtual DbSet<EmployeesFunctionality> EmployeesFunctionalities { get; set; }
-
-    public virtual DbSet<Functionality> Functionalities { get; set; }
-
-    public virtual DbSet<Module> Modules { get; set; }
-
-    public virtual DbSet<Role> Roles { get; set; }
-
-    public virtual DbSet<RolesFunctionality> RolesFunctionalities { get; set; }
-
-    public virtual DbSet<State> States { get; set; }
-
-    public virtual DbSet<Vendor> Vendors { get; set; }
-
-    public virtual DbSet<VendorsContact> VendorsContacts { get; set; }
+    // Tus DbSet properties permanecen igual...
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseMySql("server=localhost;port=3306;database=avipro5;user=root;password=root", ServerVersion.Parse("8.0.43-mysql"));
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            var connectionString = _configuration.GetConnectionString("DB.MySQL.DefaultConnection");
+            optionsBuilder.UseMySql(connectionString, ServerVersion.Parse("8.0.43-mysql"));
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
