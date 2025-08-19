@@ -7,9 +7,9 @@ namespace API.Services
 {
     public interface IAuthService
     {
-        Task<AuthResponse> LoginAsync(string username, string password);
+         Task<AuthResponse> LoginAsync(LoginRequest request);
+        Task<bool> ValidateCredentialsAsync(LoginRequest request);
         Task<AuthResponse> RegisterAsync(RegisterRequest request);
-        Task<bool> ValidateUserAsync(string username, string password);
         string GenerateJwtToken(Employee employee);
     }
 }

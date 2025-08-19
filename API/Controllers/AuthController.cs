@@ -30,7 +30,7 @@ namespace API.Controllers
                     return BadRequest("Usuario y contraseña son requeridos");
                 }
 
-                var authResponse = await _authService.LoginAsync(request.Username, request.Password);
+                var authResponse = await _authService.LoginAsync(request);
 
                 _logger.LogInformation($"Usuario {request.Username} ha iniciado sesión exitosamente");
 
