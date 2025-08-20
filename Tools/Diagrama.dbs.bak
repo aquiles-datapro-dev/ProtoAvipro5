@@ -108,24 +108,6 @@
 			</index>
 			<options><![CDATA[engine=InnoDB]]></options>
 		</table>
-		<table name="refresh_tokens" >
-			<column name="id" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
-			<column name="token" type="text" jt="-1" mandatory="y" />
-			<column name="employee_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="expires_at" type="datetime" jt="93" />
-			<column name="created_at" type="datetime" jt="93" />
-			<column name="revoked_at" type="datetime" jt="93" />
-			<index name="pk_refresh_tokens_id" unique="PRIMARY_KEY" >
-				<column name="id" />
-			</index>
-			<index name="fk_refresh_tokens_employees" unique="NORMAL" >
-				<column name="employee_id" />
-			</index>
-			<fk name="fk_refresh_tokens_employees" to_schema="avipro5" to_table="employees" delete_action="cascade" update_action="cascade" >
-				<fk_column name="employee_id" pk="id" />
-			</fk>
-			<options><![CDATA[engine=InnoDB]]></options>
-		</table>
 		<table name="roles" >
 			<column name="parent_role_id" type="bigint" jt="-5" />
 			<column name="id" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
@@ -251,22 +233,193 @@
 		<entity schema="avipro5" name="employees_functionalities" color="C1D8EE" x="432" y="400" />
 		<entity schema="avipro5" name="functionalities" color="C1D8EE" x="656" y="80" />
 		<entity schema="avipro5" name="module" color="C1D8EE" x="848" y="96" />
-		<entity schema="avipro5" name="refresh_tokens" color="C1D8EE" x="624" y="224" />
 		<entity schema="avipro5" name="roles" color="C1D8EE" x="304" y="64" />
 		<entity schema="avipro5" name="roles_functionalities" color="C1D8EE" x="400" y="256" />
 		<entity schema="avipro5" name="state" color="3986C1" x="416" y="544" />
-		<entity schema="avipro5" name="vendors" color="C1D8EE" x="1040" y="48" />
+		<entity schema="avipro5" name="vendors" color="C1D8EE" x="1024" y="64" />
 		<entity schema="avipro5" name="vendors_contact" color="C1D8EE" x="784" y="336" />
 		<script name="SQL_Editor" id="Editor_1f3b" language="SQL" >
-			<string><![CDATA[CREATE TABLE RefreshTokens (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Token NVARCHAR(500) NOT NULL,
-    EmployeeId INT NOT NULL,
-    Expires DATETIME2 NOT NULL,
-    Created DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    Revoked DATETIME2 NULL,
-    FOREIGN KEY (EmployeeId) REFERENCES employees(id)
-);]]></string>
+			<string><![CDATA[CREATE SCHEMA avipro5;
+
+CREATE TABLE avipro5.module ( 
+	id                   bigint  NOT NULL  AUTO_INCREMENT  PRIMARY KEY,
+	name                 varchar(100)      
+ ) engine=InnoDB;
+
+CREATE TABLE avipro5.roles ( 
+	parent_role_id       bigint      ,
+	id                   bigint  NOT NULL  AUTO_INCREMENT  PRIMARY KEY,
+	name                 varchar(100)      ,
+	description          text      ,
+	created_at           datetime      ,
+	modified_at          datetime      
+ ) engine=InnoDB;
+
+CREATE INDEX fk_tbl_roles_tbl_roles ON avipro5.roles ( parent_role_id );
+
+CREATE TABLE avipro5.state ( 
+	id                   bigint  NOT NULL  AUTO_INCREMENT  PRIMARY KEY,
+	abbr                 varchar(50)      ,
+	name                 varchar(100)      ,
+	created_at           datetime      ,
+	modified_at          datetime      
+ );
+
+CREATE TABLE avipro5.vendors ( 
+	id                   bigint  NOT NULL  AUTO_INCREMENT  PRIMARY KEY,
+	vendor_name          varchar(50)      ,
+	address              text      ,
+	city                 varchar(25)      ,
+	zip_code             varchar(15)      ,
+	phone                varchar(25)      ,
+	fax                  varchar(25)      ,
+	contact              varchar(100)      ,
+	payment_method       varchar(50)      ,
+	terms                int      ,
+	bal_due              decimal(19,4)      ,
+	vendor_tax           float(12,0)      ,
+	internet_address     varchar(50)      ,
+	acct_number          varchar(50)      ,
+	fast_type            int      ,
+	email                varchar(50)      ,
+	contact_second       varchar(100)      ,
+	country              varchar(50)      ,
+	bill_add_1           varchar(50)      ,
+	bill_add_2           varchar(50)      ,
+	bill_city            varchar(50)      ,
+	bill_state           varchar(2)      ,
+	bill_zip             varchar(50)      ,
+	bill_country         varchar(50)      ,
+	audit_vendor         boolean      ,
+	last_audit_date      datetime      ,
+	blacklist            boolean      ,
+	date_audit_sent      datetime      ,
+	audit_notes          text      ,
+	easa_date            datetime      ,
+	drug_pro_date        datetime      ,
+	iso_date             datetime      ,
+	nap_cap_date         datetime      ,
+	created_at           datetime      ,
+	modified_at          datetime      ,
+	state_id             bigint  NOT NULL    
+ ) engine=InnoDB;
+
+CREATE INDEX fk_tbl_vendors_tbl_state ON avipro5.vendors ( state_id );
+
+CREATE TABLE avipro5.vendors_contact ( 
+	id                   bigint  NOT NULL  AUTO_INCREMENT  PRIMARY KEY,
+	name                 varchar(50)      ,
+	title                int      ,
+	email                varchar(50)      ,
+	phone                varchar(50)      ,
+	fax                  varchar(50)      ,
+	created_at           datetime      ,
+	modified_at          datetime      ,
+	vendor_id            bigint  NOT NULL    
+ ) engine=InnoDB;
+
+CREATE INDEX fk_tbl_vendors_contact_tbl_vendors ON avipro5.vendors_contact ( vendor_id );
+
+CREATE TABLE avipro5.employees ( 
+	id                   bigint  NOT NULL  AUTO_INCREMENT  PRIMARY KEY,
+	last_name            varchar(30)      ,
+	first_name           varchar(30)      ,
+	middle_initial       varchar(3)      ,
+	address              text      ,
+	city                 varchar(50)      ,
+	zip_code             varchar(15)      ,
+	home_phone           varchar(25)      ,
+	beeper               varchar(25)      ,
+	cellular             varchar(50)      ,
+	emergency_contact    varchar(20)      ,
+	emergency_phone      varchar(25)      ,
+	emergency_relation   varchar(25)      ,
+	hire_date            datetime      ,
+	last_work_date       datetime      ,
+	date_birth           datetime      ,
+	title                varchar(40)      ,
+	wages                decimal(19,4)      ,
+	comments             longtext      ,
+	ss                   varchar(15)      ,
+	dep                  int      ,
+	shop                 varchar(20)      ,
+	m_s                  varchar(1)      ,
+	active               boolean      ,
+	tech                 boolean      ,
+	insp                 boolean      ,
+	emp_ini              varchar(5)      ,
+	username             varchar(100)      ,
+	email                varchar(50)      ,
+	password             text      ,
+	emp_mail             varchar(50)      ,
+	office_personal      boolean      ,
+	service              boolean      ,
+	department           varchar(50)      ,
+	total_vac            int      ,
+	used_vac             int      ,
+	balance_vac          int      ,
+	sing_off_title       varchar(50)      ,
+	ri                   boolean      ,
+	ip                   boolean      ,
+	rts                  boolean      ,
+	created_at           datetime      ,
+	modified_at          datetime      ,
+	state_id             bigint  NOT NULL    ,
+	role_id              bigint  NOT NULL    
+ ) engine=InnoDB;
+
+CREATE INDEX fk_tbl_employees_tbl_state ON avipro5.employees ( state_id );
+
+CREATE INDEX fk_tbl_employees_tbl_roles ON avipro5.employees ( role_id );
+
+CREATE TABLE avipro5.functionalities ( 
+	id                   bigint  NOT NULL  AUTO_INCREMENT  PRIMARY KEY,
+	module_id            bigint  NOT NULL    ,
+	name                 varchar(100)      
+ ) engine=InnoDB;
+
+CREATE INDEX fk_functionalities_module ON avipro5.functionalities ( module_id );
+
+CREATE TABLE avipro5.roles_functionalities ( 
+	id                   bigint  NOT NULL  AUTO_INCREMENT  PRIMARY KEY,
+	role_id              bigint  NOT NULL    ,
+	functionality_id     bigint  NOT NULL    
+ ) engine=InnoDB;
+
+CREATE INDEX fk_roles_functionalities_functionalities ON avipro5.roles_functionalities ( functionality_id );
+
+CREATE INDEX fk_roles_functionalities_roles ON avipro5.roles_functionalities ( role_id );
+
+CREATE TABLE avipro5.employees_functionalities ( 
+	id                   bigint  NOT NULL  AUTO_INCREMENT  PRIMARY KEY,
+	employee_id          bigint  NOT NULL    ,
+	functionality_id     bigint  NOT NULL    
+ ) engine=InnoDB;
+
+CREATE INDEX fk_employees_functionalities_employees ON avipro5.employees_functionalities ( employee_id );
+
+CREATE INDEX fk_employees_functionalities_functionalities ON avipro5.employees_functionalities ( functionality_id );
+
+ALTER TABLE avipro5.employees ADD CONSTRAINT fk_tbl_employees_tbl_state FOREIGN KEY ( state_id ) REFERENCES avipro5.state( id ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE avipro5.employees ADD CONSTRAINT fk_tbl_employees_tbl_roles FOREIGN KEY ( role_id ) REFERENCES avipro5.roles( id ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE avipro5.employees_functionalities ADD CONSTRAINT fk_employees_functionalities_employees FOREIGN KEY ( employee_id ) REFERENCES avipro5.employees( id ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+ALTER TABLE avipro5.employees_functionalities ADD CONSTRAINT fk_employees_functionalities_functionalities FOREIGN KEY ( functionality_id ) REFERENCES avipro5.functionalities( id ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+ALTER TABLE avipro5.functionalities ADD CONSTRAINT fk_functionalities_module FOREIGN KEY ( module_id ) REFERENCES avipro5.module( id ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+ALTER TABLE avipro5.roles ADD CONSTRAINT fk_tbl_roles_tbl_roles FOREIGN KEY ( parent_role_id ) REFERENCES avipro5.roles( id ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE avipro5.roles_functionalities ADD CONSTRAINT fk_roles_functionalities_functionalities FOREIGN KEY ( functionality_id ) REFERENCES avipro5.functionalities( id ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+ALTER TABLE avipro5.roles_functionalities ADD CONSTRAINT fk_roles_functionalities_roles FOREIGN KEY ( role_id ) REFERENCES avipro5.roles( id ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+ALTER TABLE avipro5.vendors ADD CONSTRAINT fk_tbl_vendors_tbl_state FOREIGN KEY ( state_id ) REFERENCES avipro5.state( id ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE avipro5.vendors_contact ADD CONSTRAINT fk_tbl_vendors_contact_tbl_vendors FOREIGN KEY ( vendor_id ) REFERENCES avipro5.vendors( id ) ON DELETE CASCADE ON UPDATE CASCADE;
+]]></string>
 		</script>
 	</layout>
 </project>

@@ -9,18 +9,20 @@ namespace Shared.Connector;
 
 public partial class CustomDBContext : DbContext
 {
+    private readonly IConfiguration _configuration;
+    public virtual DbSet<Employee> Employees { get; set; }
+    public virtual DbSet<EmployeesFunctionality> EmployeesFunctionalities { get; set; }
+    public virtual DbSet<Functionality> Functionalities { get; set; }
+    public virtual DbSet<Module> Modules { get; set; }
+    public virtual DbSet<Role> Roles { get; set; }
+    public virtual DbSet<RolesFunctionality> RolesFunctionalities { get; set; }
+    public virtual DbSet<State> States { get; set; }
+    public virtual DbSet<Vendor> Vendors { get; set; }
+    public virtual DbSet<VendorsContact> VendorsContacts { get; set; }
 
-   private readonly IConfiguration _configuration;
-   public virtual DbSet<Employee> Employees { get; set; }
-   public virtual DbSet<EmployeesFunctionality> EmployeesFunctionalities { get; set; }
-   public virtual DbSet<Functionality> Functionalities { get; set; }
-   public virtual DbSet<Module> Modules { get; set; }
-   public virtual DbSet<Role> Roles { get; set; }
-   public virtual DbSet<RolesFunctionality> RolesFunctionalities { get; set; }
-   public virtual DbSet<State> States { get; set; }
-   public virtual DbSet<Vendor> Vendors { get; set; }
-   public virtual DbSet<VendorsContact> VendorsContacts { get; set; }
-
+    // Nuevas tablas para autenticación
+    public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
+    public virtual DbSet<LoginAudit> LoginAudits { get; set; }
 
     public CustomDBContext()
     {
@@ -31,8 +33,6 @@ public partial class CustomDBContext : DbContext
     {
         _configuration = configuration;
     }
-
-    // Tus DbSet properties permanecen igual...
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -49,6 +49,101 @@ public partial class CustomDBContext : DbContext
             .UseCollation("utf8mb4_0900_ai_ci")
             .HasCharSet("utf8mb4");
 
+        // Configuración de RefreshToken
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("refresh_tokens");
+
+            entity.HasIndex(e => e.EmployeeId, "fk_refresh_tokens_employees");
+            entity.HasIndex(e => e.Token, "ix_refresh_tokens_token").IsUnique();
+            entity.HasIndex(e => e.Expires, "ix_refresh_tokens_expires");
+            entity.HasIndex(e => e.Revoked, "ix_refresh_tokens_revoked");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Token)
+                .IsRequired()
+                .HasMaxLength(255)
+                .HasColumnName("token");
+            entity.Property(e => e.EmployeeId).HasColumnName("employee_id");
+            entity.Property(e => e.Created)
+                .HasColumnType("datetime")
+                .HasColumnName("created")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.Expires)
+                .HasColumnType("datetime")
+                .HasColumnName("expires");
+            entity.Property(e => e.Revoked)
+                .HasColumnType("datetime")
+                .HasColumnName("revoked")
+                .IsRequired(false);
+            entity.Property(e => e.RevokedByIp)
+                .HasMaxLength(45)
+                .HasColumnName("revoked_by_ip")
+                .IsRequired(false);
+            entity.Property(e => e.CreatedByIp)
+                .HasMaxLength(45)
+                .HasColumnName("created_by_ip")
+                .IsRequired(false);
+            entity.Property(e => e.UserAgent)
+                .HasMaxLength(500)
+                .HasColumnName("user_agent")
+                .IsRequired(false);
+            entity.Property(e => e.ReasonRevoked)
+                .HasMaxLength(100)
+                .HasColumnName("reason_revoked")
+                .IsRequired(false);
+
+            entity.HasOne(d => d.Employee)
+                .WithMany()
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_refresh_tokens_employees");
+        });
+
+        // Configuración de LoginAudit
+        modelBuilder.Entity<LoginAudit>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("login_audits");
+
+            entity.HasIndex(e => e.EmployeeId, "fk_login_audits_employees");
+            entity.HasIndex(e => e.LoginTime, "ix_login_audits_login_time");
+            entity.HasIndex(e => e.Success, "ix_login_audits_success");
+            entity.HasIndex(e => e.IpAddress, "ix_login_audits_ip_address");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.EmployeeId).HasColumnName("employee_id");
+            entity.Property(e => e.LoginTime)
+                .HasColumnType("datetime")
+                .HasColumnName("login_time")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.IpAddress)
+                .IsRequired()
+                .HasMaxLength(45)
+                .HasColumnName("ip_address");
+            entity.Property(e => e.UserAgent)
+                .HasMaxLength(500)
+                .HasColumnName("user_agent")
+                .IsRequired(false);
+            entity.Property(e => e.Success)
+                .HasColumnName("success")
+                .HasDefaultValue(false);
+            entity.Property(e => e.FailureReason)
+                .HasMaxLength(200)
+                .HasColumnName("failure_reason")
+                .IsRequired(false);
+
+            entity.HasOne(d => d.Employee)
+                .WithMany()
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_login_audits_employees");
+        });
+
+        // Configuraciones existentes (se mantienen igual)
         modelBuilder.Entity<Employee>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");

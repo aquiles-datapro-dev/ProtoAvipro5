@@ -3,7 +3,7 @@ using Shared.Requests;
 using Shared.Responses;
 
 
-namespace API.Services
+namespace API.Services.Auth
 {
     public interface IAuthService
     {

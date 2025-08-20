@@ -1,4 +1,4 @@
-﻿using API.Services;
+﻿using API.Services.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Requests;
