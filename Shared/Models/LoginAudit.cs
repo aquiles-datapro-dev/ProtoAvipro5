@@ -9,8 +9,8 @@ namespace Shared.Models
     public class LoginAudit
     {
 
-        public int Id { get; set; }
-        public int EmployeeId { get; set; }
+        public long Id { get; set; }
+        public long EmployeeId { get; set; }
         public DateTime LoginTime { get; set; } = DateTime.UtcNow;
         public string? IpAddress { get; set; }
         public string? UserAgent { get; set; }

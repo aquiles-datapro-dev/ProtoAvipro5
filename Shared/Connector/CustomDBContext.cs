@@ -54,7 +54,7 @@ public partial class CustomDBContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("refresh_tokens");
+            entity.ToTable("refreshtokens");
 
             entity.HasIndex(e => e.EmployeeId, "fk_refresh_tokens_employees");
             entity.HasIndex(e => e.Token, "ix_refresh_tokens_token").IsUnique();
@@ -66,7 +66,7 @@ public partial class CustomDBContext : DbContext
                 .IsRequired()
                 .HasMaxLength(255)
                 .HasColumnName("token");
-            entity.Property(e => e.EmployeeId).HasColumnName("employee_id");
+            entity.Property(e => e.EmployeeId).HasColumnName("EmployeeId");
             entity.Property(e => e.Created)
                 .HasColumnType("datetime")
                 .HasColumnName("created")
@@ -80,19 +80,19 @@ public partial class CustomDBContext : DbContext
                 .IsRequired(false);
             entity.Property(e => e.RevokedByIp)
                 .HasMaxLength(45)
-                .HasColumnName("revoked_by_ip")
+                .HasColumnName("RevokedByIp")
                 .IsRequired(false);
             entity.Property(e => e.CreatedByIp)
                 .HasMaxLength(45)
-                .HasColumnName("created_by_ip")
+                .HasColumnName("CreatedByIP")
                 .IsRequired(false);
             entity.Property(e => e.UserAgent)
                 .HasMaxLength(500)
-                .HasColumnName("user_agent")
+                .HasColumnName("UserAgent")
                 .IsRequired(false);
             entity.Property(e => e.ReasonRevoked)
                 .HasMaxLength(100)
-                .HasColumnName("reason_revoked")
+                .HasColumnName("ReasonRevoked")
                 .IsRequired(false);
 
             entity.HasOne(d => d.Employee)
@@ -107,7 +107,7 @@ public partial class CustomDBContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("login_audits");
+            entity.ToTable("loginaudits");
 
             entity.HasIndex(e => e.EmployeeId, "fk_login_audits_employees");
             entity.HasIndex(e => e.LoginTime, "ix_login_audits_login_time");
@@ -115,25 +115,25 @@ public partial class CustomDBContext : DbContext
             entity.HasIndex(e => e.IpAddress, "ix_login_audits_ip_address");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.EmployeeId).HasColumnName("employee_id");
+            entity.Property(e => e.EmployeeId).HasColumnName("employeeid");
             entity.Property(e => e.LoginTime)
                 .HasColumnType("datetime")
-                .HasColumnName("login_time")
+                .HasColumnName("logintime")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.IpAddress)
                 .IsRequired()
                 .HasMaxLength(45)
-                .HasColumnName("ip_address");
+                .HasColumnName("ipaddress");
             entity.Property(e => e.UserAgent)
                 .HasMaxLength(500)
-                .HasColumnName("user_agent")
+                .HasColumnName("useragent")
                 .IsRequired(false);
             entity.Property(e => e.Success)
                 .HasColumnName("success")
                 .HasDefaultValue(false);
             entity.Property(e => e.FailureReason)
                 .HasMaxLength(200)
-                .HasColumnName("failure_reason")
+                .HasColumnName("failurereason")
                 .IsRequired(false);
 
             entity.HasOne(d => d.Employee)
