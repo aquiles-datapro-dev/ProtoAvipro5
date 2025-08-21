@@ -14,17 +14,27 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ===================================================================
+// SECCIÓN 1: CONFIGURACIÓN BÁSICA DE SERVICIOS
+// ===================================================================
+
+// Servicios esenciales para una aplicación MVC/API
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// 1. CONFIGURACIÓN DE LOGGING
+// ===================================================================
+// SECCIÓN 2: CONFIGURACIÓN DE LOGGING
+// ===================================================================
+
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
 
-// 2. CONFIGURAR DbContext CORRECTAMENTE
+// ===================================================================
+// SECCIÓN 3: CONFIGURACIÓN DE BASE DE DATOS
+// ===================================================================
+
 var connectionString = builder.Configuration.GetConnectionString("DB.MySQL.DefaultConnection")
                      ?? builder.Configuration["DB:MySQL:DefaultConnection"];
 if (string.IsNullOrEmpty(connectionString))
@@ -32,19 +42,26 @@ if (string.IsNullOrEmpty(connectionString))
     throw new InvalidOperationException("No se encontró la cadena de conexión en la configuración");
 }
 
+// Configuración de Entity Framework con MySQL
 builder.Services.AddDbContext<CustomDBContext>(options =>
 {
     options.UseMySql(connectionString, ServerVersion.Parse("8.0.43-mysql"));
+    // Solo habilitar en desarrollo para evitar exposición de datos sensibles
     options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
     options.EnableDetailedErrors(builder.Environment.IsDevelopment());
 });
 
-// 3. CONFIGURACIÓN DE CACHE
-builder.Services.AddMemoryCache();
-builder.Services.AddDistributedMemoryCache(); // Para production usar Redis o SQL Server
+// ===================================================================
+// SECCIÓN 4: CONFIGURACIÓN DE CACHÉ
+// ===================================================================
 
+builder.Services.AddMemoryCache(); // Cache en memoria para datos frecuentes
+builder.Services.AddDistributedMemoryCache(); // Cache distribuido (para producción usar Redis o SQL Server)
 
-// 5. CONFIGURAR JWT AUTHENTICATION
+// ===================================================================
+// SECCIÓN 5: CONFIGURACIÓN DE AUTENTICACIÓN JWT
+// ===================================================================
+
 var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key no configurada");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer no configurado");
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience no configurado");
@@ -61,10 +78,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ClockSkew = TimeSpan.Zero // Eliminar skew para validación exacta
+            ClockSkew = TimeSpan.Zero // Eliminar margen de tiempo para validación exacta
         };
 
-        // Configuración para aceptar tokens con o sin "Bearer"
+        // Configuración para aceptar tokens con o sin "Bearer" (útil para WebSockets)
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -79,7 +96,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                         ? token.ToString()["Bearer ".Length..].Trim()
                         : token.ToString().Trim();
                 }
-                // Desde query string (para WebSockets)
+                // Desde query string (para WebSockets en Blazor Server)
                 else if (!string.IsNullOrEmpty(accessToken))
                 {
                     context.Token = accessToken;
@@ -102,37 +119,50 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// 6. CONFIGURAR AUTORIZACIÓN
+// ===================================================================
+// SECCIÓN 6: CONFIGURACIÓN DE AUTORIZACIÓN
+// ===================================================================
+
 builder.Services.AddAuthorization(options =>
 {
     options.DefaultPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
 
+    // Políticas personalizadas
     options.AddPolicy("AdminOnly", policy =>
         policy.RequireRole("Admin"));
 
     options.AddPolicy("AdminOrManager", policy =>
         policy.RequireRole("Admin", "Manager"));
 
-    // Nueva política para usuarios activos
+    // Política para usuarios activos
     options.AddPolicy("ActiveUser", policy =>
         policy.RequireClaim("IsActive", "true"));
 });
 
-// 7. REGISTRAR REPOSITORIOS Y SERVICIOS
+// ===================================================================
+// SECCIÓN 7: REGISTRO DE REPOSITORIOS Y SERVICIOS DE APLICACIÓN
+// ===================================================================
+
+// Repositorios de datos
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ILoginAuditRepository, LoginAuditRepository>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ITokenService, TokenService>(); // Nuevo servicio para gestión de tokens
 
-// Servicios de aplicación
-builder.Services.AddHttpContextAccessor();
+// Servicios de autenticación
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+
+// Servicios de utilidad
+builder.Services.AddHttpContextAccessor(); // Necesario para Blazor Server
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-// 8. CONFIGURAR SWAGGER
+// ===================================================================
+// SECCIÓN 8: CONFIGURACIÓN DE SWAGGER (SOLO DESARROLLO)
+// ===================================================================
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -158,7 +188,7 @@ builder.Services.AddSwaggerGen(options =>
         Name = "Authorization",
         Type = SecuritySchemeType.ApiKey,
         In = ParameterLocation.Header,
-        Description = "Ingrese el token JWT (con o sin 'Bearer')\n\nEjemplo: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\nO simplemente: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        Description = "Ingrese el token JWT (con o sin 'Bearer')"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -176,7 +206,7 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 
-    // Incluir comentarios XML
+    // Incluir comentarios XML para documentación
     try
     {
         var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -191,11 +221,13 @@ builder.Services.AddSwaggerGen(options =>
         Console.WriteLine($"Error al cargar comentarios XML: {ex.Message}");
     }
 
-    // Habilitar anotaciones
     options.EnableAnnotations();
 });
 
-// 9. CONFIGURAR CORS
+// ===================================================================
+// SECCIÓN 9: CONFIGURACIÓN DE CORS (IMPORTANTE PARA BLAZOR SERVER)
+// ===================================================================
+
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
                   ?? new[] { "http://localhost:3000", "https://localhost:7000" };
 
@@ -206,7 +238,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials()
+              .AllowCredentials() // Necesario para autenticación con cookies/tokens
               .WithExposedHeaders("Authorization", "Refresh-Token");
     });
 
@@ -220,7 +252,10 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 10. RATE LIMITING (Básico)
+// ===================================================================
+// SECCIÓN 10: RATE LIMITING (LIMITACIÓN DE PETICIONES)
+// ===================================================================
+
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
@@ -230,21 +265,32 @@ builder.Services.AddRateLimiter(options =>
             factory: partition => new FixedWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
-                PermitLimit = 100,
+                PermitLimit = 100, // 100 peticiones por minuto
                 Window = TimeSpan.FromMinutes(1)
             });
     });
 });
 
-// 11. COMPRESIÓN DE RESPUESTAS
+// ===================================================================
+// SECCIÓN 11: COMPRESIÓN DE RESPUESTAS (MEJORA DE RENDIMIENTO)
+// ===================================================================
+
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
 });
 
+// ===================================================================
+// CONSTRUCCIÓN DE LA APLICACIÓN
+// ===================================================================
+
 var app = builder.Build();
 
-// 12. CONFIGURAR MIDDLEWARE
+// ===================================================================
+// SECCIÓN 12: CONFIGURACIÓN DEL PIPELINE DE MIDDLEWARE
+// ===================================================================
+
+// Middleware de compresión (debe estar al inicio)
 app.UseResponseCompression();
 
 // Configurar CORS según entorno
@@ -252,38 +298,48 @@ if (app.Environment.IsDevelopment())
 {
     app.UseCors("DevelopmentCors");
     app.UseDeveloperExceptionPage();
+
+    // Swagger siempre disponible en desarrollo
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mi API V1");
+        c.ConfigObject.AdditionalItems["persistAuthorization"] = "true";
+        c.DisplayRequestDuration();
+
+        // Configurar Swagger como página principal en desarrollo
+        c.RoutePrefix = string.Empty; // Hace que Swagger esté en la raíz
+    });
 }
 else
 {
     app.UseCors("ProductionCors");
-    app.UseExceptionHandler("/error");
-    app.UseHsts();
+    app.UseExceptionHandler("/error"); // Manejo de errores para producción
+    app.UseHsts(); // HTTP Strict Transport Security
+
+    // En producción, también habilitamos Swagger pero con ruta específica
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mi API V1");
+        c.RoutePrefix = "swagger"; // Acceso mediante /swagger
+    });
 }
 
-// Swagger configuration
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mi API V1");
-    c.ConfigObject.AdditionalItems["persistAuthorization"] = "true";
-    c.DisplayRequestDuration();
-
-    if (!app.Environment.IsDevelopment())
-    {
-        c.DocumentTitle = "Mi API - Production";
-    }
-});
-
+// Redirección HTTPS
 app.UseHttpsRedirection();
 
 // Rate limiting
 app.UseRateLimiter();
 
-// Authentication & Authorization
-app.UseAuthentication();
-app.UseAuthorization();
+// IMPORTANTE: El orden de estos middlewares es crucial
+app.UseAuthentication(); // Primero autenticación
+app.UseAuthorization();  // Luego autorización
 
-// 13. MIDDLEWARE PERSONALIZADO PARA MANEJO DE EXCEPCIONES
+// ===================================================================
+// SECCIÓN 13: MIDDLEWARE PERSONALIZADO PARA MANEJO DE EXCEPCIONES
+// ===================================================================
+
 app.Use(async (context, next) =>
 {
     try
@@ -304,7 +360,10 @@ app.Use(async (context, next) =>
     }
 });
 
-// 14. MIDDLEWARE PARA LIMPIEZA AUTOMÁTICA DE TOKENS EXPIRADOS
+// ===================================================================
+// SECCIÓN 14: MIDDLEWARE PARA LIMPIEZA AUTOMÁTICA DE TOKENS EXPIRADOS
+// ===================================================================
+
 app.Use(async (context, next) =>
 {
     // Ejecutar limpieza cada hora
@@ -331,22 +390,42 @@ app.Use(async (context, next) =>
     await next();
 });
 
+// ===================================================================
+// SECCIÓN 15: CONFIGURACIÓN DE ENDPOINTS
+// ===================================================================
+
 app.MapControllers();
 
-// 15. ENDPOINTS PERSONALIZADOS
-/*app.MapGet("/", () => Results.Redirect("/swagger"));
-app.MapGet("/api/version", () => new
+// Redirección raíz a Swagger
+app.MapGet("/", context =>
 {
-    version = "1.0.0",
-    environment = app.Environment.EnvironmentName,
-    timestamp = DateTime.UtcNow
+    context.Response.Redirect("/swagger");
+    return Task.CompletedTask;
 });
 
-app.MapGet("/error", () => Results.Problem("Error interno del servidor"));*/
+// ===================================================================
+// EJECUCIÓN DE LA APLICACIÓN CON PUERTO CONFIGURABLE
+// ===================================================================
+
+// Obtener el puerto de configuración o usar 5001 por defecto
+var port = builder.Configuration.GetValue<int>("Application:Port", 5001);
+string server = builder.Configuration.GetValue<string>("Application:Server","localhost");
+
+// Configurar la URL
+app.Urls.Add($"http://{server}:{port}");
+app.Urls.Add($"https://{server}:{port + 1}"); // Puerto HTTPS usualmente es +1
+
+Console.WriteLine($"La aplicación se ejecutará en:");
+Console.WriteLine($"- HTTP: http://{server}:{port}");
+Console.WriteLine($"- HTTPS: https://{server}:{port + 1}");
+Console.WriteLine($"- Swagger: https://{server}:{port + 1}/swagger");
 
 app.Run();
 
-// 16. INTERFACES ADICIONALES PARA NUEVOS SERVICIOS
+// ===================================================================
+// SECCIÓN 16: DEFINICIONES DE INTERFACES Y SERVICIOS
+// ===================================================================
+
 public interface ITokenService
 {
     Task<string> GenerateRefreshTokenAsync(int employeeId);
